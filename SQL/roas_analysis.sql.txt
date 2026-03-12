@@ -1,0 +1,20 @@
+-- Layer 1: Data Engineering - ROAS Calculation
+-- Purpose: To merge Marketing Spend and Sales Revenue at a Daily level
+
+WITH DailySales AS (
+    SELECT 
+        CAST(order_date AS DATE) as sale_date,
+        SUM(order_total) as total_revenue
+    FROM blinkit_orders
+    GROUP BY CAST(order_date AS DATE)
+),
+MarketingROI AS (
+    SELECT 
+        s.sale_date,
+        s.total_revenue,
+        m.spend as ad_spend,
+        (s.total_revenue / NULLIF(m.spend, 0)) as roas
+    FROM DailySales s
+    JOIN blinkit_marketing_performance m ON s.sale_date = m.date
+)
+SELECT * FROM MarketingROI;
